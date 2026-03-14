@@ -58,7 +58,6 @@ button.delete-btn { background: #ff4757; color: white; width: auto; padding: 5px
     display: flex; justify-content: space-between; align-items: center;
     background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #eee;
 }
-.banner-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
 
 .design-option-btn {
     background: white; border: 1px solid #eee; padding: 20px; text-align: center;
@@ -68,3 +67,6 @@ button.delete-btn { background: #ff4757; color: white; width: auto; padding: 5px
 .design-option-btn:hover { background: #fffbf5; border-color: #ff9900; }
 .design-option-btn i { font-size: 30px; color: #ff9900; margin-bottom: 10px; display: block; }
 .design-option-btn span { font-weight: bold; font-size: 16px; color: #333; }
+
+img { max-width: 100%; height: auto; }
+.banner-preview { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
