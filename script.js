@@ -3,12 +3,10 @@ const config = window.MY_STORE_CONFIG;
 
 firebase.initializeApp(config.firebase);
 const db = firebase.database();
-const cloudName = config.cloudinary.cloudName; 
-const uploadPreset = config.cloudinary.uploadPreset; 
 
 function checkLogin() {
-    const code = document.getElementById('login-input').value;
-    if(code === config.security.adminCode) {
+    const code = document.getElementById('login-input').value.toString().trim();
+    if(code === config.security.adminCode.toString().trim()) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('main-container').style.display = 'block';
     } else {
@@ -33,6 +31,44 @@ function showDesignSection(sectionId) {
     } else {
         document.getElementById(sectionId).style.display = 'block';
     }
+}
+
+function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let width = img.width;
+                let height = img.height;
+                const maxWidth = 800;
+                const maxHeight = 800;
+                
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                resolve(dataUrl);
+            };
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
 db.ref('orders').on('value', (snapshot) => {
@@ -67,12 +103,15 @@ db.ref('banners').on('value', snapshot => {
         });
     } else { list.innerHTML = "<p style='font-size:12px; color:#999; text-align:center;'>لا توجد بنرات حالياً</p>"; }
 });
+
 async function uploadBanner() {
     const title = document.getElementById('banner-title').value;
     const fileInput = document.getElementById('banner-img');
     if(fileInput.files.length === 0) return alert("اختر صورة");
     document.getElementById('banner-status').innerText = "جاري الرفع...";
-    const imgUrl = await uploadToCloudinary(fileInput.files[0]);
+    
+    const imgUrl = await compressImage(fileInput.files[0]);
+    
     if(imgUrl) {
         db.ref('banners').push({ title: title, image: imgUrl });
         document.getElementById('banner-status').innerText = "✅ تم";
@@ -96,12 +135,15 @@ db.ref('categories').on('value', snapshot => {
         });
     } else { listManage.innerHTML = "<p style='font-size:12px; color:#999; text-align:center;'>لا توجد تصنيفات</p>"; }
 });
+
 async function uploadCategory() {
     const name = document.getElementById('cat-name-new').value;
     const fileInput = document.getElementById('cat-img-new');
     if(!name || fileInput.files.length === 0) return alert("البيانات ناقصة");
     document.getElementById('cat-status').innerText = "جاري...";
-    const imgUrl = await uploadToCloudinary(fileInput.files[0]);
+    
+    const imgUrl = await compressImage(fileInput.files[0]);
+    
     if(imgUrl) {
         const catId = name.replace(/\s+/g, '_'); 
         db.ref('categories').push({ name: name, image: imgUrl, id: catId });
@@ -122,6 +164,7 @@ db.ref('products').on('value', snapshot => {
         });
     } else { list.innerHTML = "<p style='font-size:12px; color:#999; text-align:center;'>لا توجد منتجات</p>"; }
 });
+
 async function uploadProduct() {
     const name = document.getElementById('p-name').value;
     const price = document.getElementById('p-price').value;
@@ -130,7 +173,9 @@ async function uploadProduct() {
     const fileInput = document.getElementById('p-img');
     if(!name || !price || fileInput.files.length === 0) return alert("البيانات ناقصة");
     document.getElementById('prod-status').innerText = "جاري الرفع...";
-    const imgUrl = await uploadToCloudinary(fileInput.files[0]);
+    
+    const imgUrl = await compressImage(fileInput.files[0]);
+    
     if(imgUrl) {
         await db.ref('products').push({ title: name, price: Number(price), description: desc, category: cat, image: imgUrl, date: firebase.database.ServerValue.TIMESTAMP });
         document.getElementById('prod-status').innerText = "✅ تم النشر";
@@ -149,6 +194,7 @@ function saveSettings() {
         document.getElementById('settings-status').style.color = "green";
     });
 }
+
 db.ref('settings').on('value', snapshot => {
     const s = snapshot.val();
     if(s) {
@@ -156,14 +202,3 @@ db.ref('settings').on('value', snapshot => {
         if(s.whatsapp) document.getElementById('whatsapp-input').value = s.whatsapp;
     }
 });
-
-async function uploadToCloudinary(file) {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', uploadPreset);
-    try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body: formData });
-        const data = await res.json();
-        return data.secure_url;
-    } catch(e) { alert("فشل الرفع"); return null; }
-}
