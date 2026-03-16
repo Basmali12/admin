@@ -21,19 +21,18 @@
     <div class="admin-header">لوحة الإدارة</div>
 
     <div class="container" id="main-container" style="display: none;">
-        
-        <div id="tab-orders" class="tab-content active">
-            <span class="section-label">📦 الطلبات الواردة</span>
-            <div id="orders-list">
-                <p style="text-align:center; color:#777; margin-top:50px;">جاري تحميل الطلبات...</p>
-            </div>
-        </div>
 
-        <div id="tab-add-product" class="tab-content">
+        <div id="tab-add-product" class="tab-content active">
             <span class="section-label">🛍️ إضافة منتج جديد</span>
             <div style="background:white; padding:20px; border-radius:15px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                
+                <label style="font-size:13px; font-weight:bold;">الصورة:</label>
+                <input type="file" id="p-img">
+                
+                <label style="font-size:13px; font-weight:bold;">اسم المنتج:</label>
                 <input type="text" id="p-name" placeholder="اسم المنتج">
-                <input type="number" id="p-price" placeholder="السعر (دينار)">
+                
+                <label style="font-size:13px; font-weight:bold;">الوصف:</label>
                 <textarea id="p-desc" placeholder="وصف المنتج وتفاصيله..."></textarea>
                 
                 <label style="font-size:13px; font-weight:bold;">القسم:</label>
@@ -41,8 +40,8 @@
                     <option value="general">عام</option>
                 </select>
 
-                <label style="font-size:13px; font-weight:bold;">الصورة:</label>
-                <input type="file" id="p-img">
+                <div id="dynamic-buttons-container"></div>
+                <button class="action-btn" onclick="addDynamicButton()" style="background:#27ae60; margin-bottom:15px; width:auto; padding:8px 15px; font-size:12px;">+ إضافة زر دخول</button>
 
                 <button class="action-btn" onclick="uploadProduct()">نشر المنتج الآن</button>
                 <div id="prod-status" class="status"></div>
@@ -106,10 +105,7 @@
     </div>
 
     <nav class="bottom-nav">
-        <button class="nav-btn active" onclick="switchTab('tab-orders', this)">
-            <i class="fa-solid fa-box-open"></i><span>الطلبات</span>
-        </button>
-        <button class="nav-btn" onclick="switchTab('tab-add-product', this)">
+        <button class="nav-btn active" onclick="switchTab('tab-add-product', this)">
             <i class="fa-solid fa-circle-plus"></i><span>إضافة منتج</span>
         </button>
         <button class="nav-btn" onclick="switchTab('tab-design', this)">
