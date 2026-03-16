@@ -44,8 +44,8 @@ function compressImage(file) {
                 const ctx = canvas.getContext('2d');
                 let width = img.width;
                 let height = img.height;
-                const maxWidth = 800;
-                const maxHeight = 800;
+                const maxWidth = 1080;
+                const maxHeight = 1080;
                 
                 if (width > height) {
                     if (width > maxWidth) {
@@ -63,34 +63,13 @@ function compressImage(file) {
                 canvas.height = height;
                 ctx.drawImage(img, 0, 0, width, height);
                 
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
                 resolve(dataUrl);
             };
         };
         reader.readAsDataURL(file);
     });
 }
-
-db.ref('orders').on('value', (snapshot) => {
-    const list = document.getElementById('orders-list');
-    list.innerHTML = "";
-    const data = snapshot.val();
-    if(!data) { list.innerHTML = "<p style='text-align:center; padding:20px;'>لا توجد طلبات جديدة</p>"; return; }
-    Object.keys(data).reverse().forEach(key => {
-        const o = data[key];
-        const date = new Date(o.timestamp).toLocaleString('ar-EG');
-        let itemsHtml = "";
-        if(o.items) { o.items.forEach(i => itemsHtml += `<li>${i.title}</li>`); }
-        list.innerHTML += `
-        <div class="order-item">
-            <div class="order-header"><span>👤 ${o.customerName}</span><span style="font-size:12px; color:#999;">${date}</span></div>
-            <div class="order-details"><p>📞 <a href="tel:${o.phone}" style="color:#ff9900; text-decoration:none;">${o.phone}</a></p><p>📍 ${o.address}</p><p style="margin-top:5px; font-weight:bold;">🛒 المنتجات:</p><ul style="margin:5px 20px 10px;">${itemsHtml}</ul><p style="font-weight:bold; color:#27ae60; font-size:16px;">💰 المجموع: ${o.total}</p></div>
-            <button class="delete-btn" onclick="deleteOrder('${key}')"><i class="fa-solid fa-trash"></i> حذف</button>
-            <div style="clear:both;"></div>
-        </div>`;
-    });
-});
-function deleteOrder(key) { if(confirm("حذف الطلب؟")) db.ref('orders').child(key).remove(); }
 
 db.ref('banners').on('value', snapshot => {
     const list = document.getElementById('banners-list-container');
@@ -160,27 +139,42 @@ db.ref('products').on('value', snapshot => {
     if(data) {
         Object.keys(data).reverse().forEach(key => {
             const p = data[key];
-            list.innerHTML += `<div class="banner-list-item"><div style="display:flex; align-items:center; gap:10px;"><img src="${p.image}" class="banner-preview"><div style="font-size:12px;"><div>${p.title}</div><div style="color:#27ae60; font-weight:bold;">${p.price}</div></div></div><button class="delete-btn" onclick="deleteProduct('${key}')">X</button></div>`;
+            list.innerHTML += `<div class="banner-list-item"><div style="display:flex; align-items:center; gap:10px;"><img src="${p.image}" class="banner-preview"><div style="font-size:12px;"><div>${p.title}</div></div></div><button class="delete-btn" onclick="deleteProduct('${key}')">X</button></div>`;
         });
     } else { list.innerHTML = "<p style='font-size:12px; color:#999; text-align:center;'>لا توجد منتجات</p>"; }
 });
 
+window.addDynamicButton = function() {
+    const container = document.getElementById('dynamic-buttons-container');
+    const div = document.createElement('div');
+    div.style.display = 'flex'; div.style.gap = '5px'; div.style.marginBottom = '5px';
+    div.innerHTML = `<input type="text" class="btn-name" placeholder="تسمية الزر"><input type="url" class="btn-url" placeholder="رابط الدخول"><button class="delete-btn" onclick="this.parentElement.remove()" style="margin:8px 0;">X</button>`;
+    container.appendChild(div);
+}
+
 async function uploadProduct() {
+    const fileInput = document.getElementById('p-img');
     const name = document.getElementById('p-name').value;
-    const price = document.getElementById('p-price').value;
     const desc = document.getElementById('p-desc').value;
     const cat = document.getElementById('p-cat-select').value;
-    const fileInput = document.getElementById('p-img');
-    if(!name || !price || fileInput.files.length === 0) return alert("البيانات ناقصة");
+    
+    if(fileInput.files.length === 0 || !name) return alert("البيانات ناقصة");
     document.getElementById('prod-status').innerText = "جاري الرفع...";
     
+    const btns = [];
+    document.querySelectorAll('#dynamic-buttons-container > div').forEach(div => {
+        const bName = div.querySelector('.btn-name').value;
+        const bUrl = div.querySelector('.btn-url').value;
+        if(bName && bUrl) btns.push({ name: bName, url: bUrl });
+    });
+
     const imgUrl = await compressImage(fileInput.files[0]);
     
     if(imgUrl) {
-        await db.ref('products').push({ title: name, price: Number(price), description: desc, category: cat, image: imgUrl, date: firebase.database.ServerValue.TIMESTAMP });
+        await db.ref('products').push({ image: imgUrl, title: name, description: desc, category: cat, buttons: btns, date: firebase.database.ServerValue.TIMESTAMP });
         document.getElementById('prod-status').innerText = "✅ تم النشر";
-        document.getElementById('p-name').value = ""; document.getElementById('p-price').value = "";
-        document.getElementById('p-desc').value = ""; document.getElementById('p-img').value = "";
+        document.getElementById('p-name').value = ""; document.getElementById('p-desc').value = ""; document.getElementById('p-img').value = "";
+        document.getElementById('dynamic-buttons-container').innerHTML = "";
     }
 }
 function deleteProduct(key) { if(confirm("حذف هذا المنتج؟")) db.ref('products').child(key).remove(); }
