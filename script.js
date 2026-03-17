@@ -110,7 +110,7 @@ db.ref('categories').on('value', snapshot => {
         Object.keys(data).forEach(key => {
             const cat = data[key];
             select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
-            listManage.innerHTML += `<div class="banner-list-item"><div style="display:flex; align-items:center; gap:10px;"><img src="${cat.image}" class="banner-preview" style="border-radius:50%;"><span style="font-size:12px;">${cat.name}</span></div><button class="delete-btn" onclick="deleteCategory('${key}')">X</button></div>`;
+            listManage.innerHTML += `<div class="banner-list-item"><div style="display:flex; align-items:center; gap:10px;"><img src="${cat.image}" class="banner-preview" style="border-radius:50%;"><span style="font-size:12px;">${cat.name}</span></div><div><button class="delete-btn" style="background:#3498db; margin-left:5px;" onclick="editCategory('${key}')">تعديل</button><button class="delete-btn" onclick="deleteCategory('${key}')">X</button></div></div>`;
         });
     } else { listManage.innerHTML = "<p style='font-size:12px; color:#999; text-align:center;'>لا توجد تصنيفات</p>"; }
 });
@@ -132,6 +132,40 @@ async function uploadCategory() {
 }
 function deleteCategory(key) { if(confirm("حذف هذا التصنيف؟")) db.ref('categories').child(key).remove(); }
 
+window.editCategory = function(key) {
+    db.ref('categories/' + key).once('value').then(snapshot => {
+        const data = snapshot.val();
+        document.getElementById('cat-name-new').value = data.name;
+        document.getElementById('cat-action-btn').innerText = "تحديث التصنيف";
+        document.getElementById('cat-action-btn').onclick = function() { updateCategory(key, data.image); };
+        window.scrollTo(0,0);
+    });
+}
+
+window.updateCategory = async function(key, oldImage) {
+    const name = document.getElementById('cat-name-new').value;
+    const fileInput = document.getElementById('cat-img-new');
+    if(!name) return alert("الاسم مطلوب");
+    document.getElementById('cat-status').innerText = "جاري التحديث...";
+    
+    let imgUrl = oldImage;
+    if(fileInput.files.length > 0) {
+        imgUrl = await compressImage(fileInput.files[0]);
+    }
+    
+    db.ref('categories/' + key).update({ name: name, image: imgUrl }).then(() => {
+        document.getElementById('cat-status').innerText = "✅ تم التحديث";
+        resetCategoryForm();
+    });
+}
+
+window.resetCategoryForm = function() {
+    document.getElementById('cat-name-new').value = "";
+    document.getElementById('cat-img-new').value = "";
+    document.getElementById('cat-action-btn').innerText = "إنشاء التصنيف";
+    document.getElementById('cat-action-btn').onclick = uploadCategory;
+}
+
 db.ref('products').on('value', snapshot => {
     const list = document.getElementById('products-list-manage');
     list.innerHTML = "";
@@ -139,7 +173,7 @@ db.ref('products').on('value', snapshot => {
     if(data) {
         Object.keys(data).reverse().forEach(key => {
             const p = data[key];
-            list.innerHTML += `<div class="banner-list-item"><div style="display:flex; align-items:center; gap:10px;"><img src="${p.image}" class="banner-preview"><div style="font-size:12px;"><div>${p.title}</div></div></div><button class="delete-btn" onclick="deleteProduct('${key}')">X</button></div>`;
+            list.innerHTML += `<div class="banner-list-item"><div style="display:flex; align-items:center; gap:10px;"><img src="${p.image}" class="banner-preview"><div style="font-size:12px;"><div>${p.title}</div></div></div><div><button class="delete-btn" style="background:#3498db; margin-left:5px;" onclick="editProduct('${key}')">تعديل</button><button class="delete-btn" onclick="deleteProduct('${key}')">X</button></div></div>`;
         });
     } else { list.innerHTML = "<p style='font-size:12px; color:#999; text-align:center;'>لا توجد منتجات</p>"; }
 });
@@ -173,26 +207,67 @@ async function uploadProduct() {
     if(imgUrl) {
         await db.ref('products').push({ image: imgUrl, title: name, description: desc, category: cat, buttons: btns, date: firebase.database.ServerValue.TIMESTAMP });
         document.getElementById('prod-status').innerText = "✅ تم النشر";
-        document.getElementById('p-name').value = ""; document.getElementById('p-desc').value = ""; document.getElementById('p-img').value = "";
-        document.getElementById('dynamic-buttons-container').innerHTML = "";
+        resetProductForm();
     }
 }
 function deleteProduct(key) { if(confirm("حذف هذا المنتج؟")) db.ref('products').child(key).remove(); }
 
-function saveSettings() {
-    const name = document.getElementById('store-name-input').value;
-    const phone = document.getElementById('whatsapp-input').value;
-    if(!name || !phone) return alert("أكمل البيانات");
-    db.ref('settings').update({ storeName: name, whatsapp: phone }).then(() => {
-        document.getElementById('settings-status').innerText = "✅ تم الحفظ";
-        document.getElementById('settings-status').style.color = "green";
+window.editProduct = function(key) {
+    db.ref('products/' + key).once('value').then(snapshot => {
+        const data = snapshot.val();
+        document.getElementById('p-name').value = data.title;
+        document.getElementById('p-desc').value = data.description || '';
+        document.getElementById('p-cat-select').value = data.category || 'general';
+        
+        const btnsContainer = document.getElementById('dynamic-buttons-container');
+        btnsContainer.innerHTML = '';
+        if(data.buttons) {
+            data.buttons.forEach(b => {
+                const div = document.createElement('div');
+                div.style.display = 'flex'; div.style.gap = '5px'; div.style.marginBottom = '5px';
+                div.innerHTML = `<input type="text" class="btn-name" placeholder="تسمية الزر" value="${b.name}"><input type="url" class="btn-url" placeholder="رابط الدخول" value="${b.url}"><button class="delete-btn" onclick="this.parentElement.remove()" style="margin:8px 0;">X</button>`;
+                btnsContainer.appendChild(div);
+            });
+        }
+        
+        document.getElementById('prod-action-btn').innerText = "تحديث المنتج";
+        document.getElementById('prod-action-btn').onclick = function() { updateProduct(key, data.image); };
+        switchTab('tab-add-product', document.querySelector('.nav-btn:first-child'));
     });
 }
 
-db.ref('settings').on('value', snapshot => {
-    const s = snapshot.val();
-    if(s) {
-        if(s.storeName) document.getElementById('store-name-input').value = s.storeName;
-        if(s.whatsapp) document.getElementById('whatsapp-input').value = s.whatsapp;
+window.updateProduct = async function(key, oldImage) {
+    const name = document.getElementById('p-name').value;
+    const desc = document.getElementById('p-desc').value;
+    const cat = document.getElementById('p-cat-select').value;
+    const fileInput = document.getElementById('p-img');
+    
+    if(!name) return alert("الاسم مطلوب");
+    document.getElementById('prod-status').innerText = "جاري التحديث...";
+    
+    const btns = [];
+    document.querySelectorAll('#dynamic-buttons-container > div').forEach(div => {
+        const bName = div.querySelector('.btn-name').value;
+        const bUrl = div.querySelector('.btn-url').value;
+        if(bName && bUrl) btns.push({ name: bName, url: bUrl });
+    });
+    
+    let imgUrl = oldImage;
+    if(fileInput.files.length > 0) {
+        imgUrl = await compressImage(fileInput.files[0]);
     }
-});
+    
+    db.ref('products/' + key).update({ title: name, description: desc, category: cat, buttons: btns, image: imgUrl }).then(() => {
+        document.getElementById('prod-status').innerText = "✅ تم التحديث";
+        resetProductForm();
+    });
+}
+
+window.resetProductForm = function() {
+    document.getElementById('p-name').value = "";
+    document.getElementById('p-desc').value = "";
+    document.getElementById('p-img').value = "";
+    document.getElementById('dynamic-buttons-container').innerHTML = "";
+    document.getElementById('prod-action-btn').innerText = "نشر المنتج الآن";
+    document.getElementById('prod-action-btn').onclick = uploadProduct;
+}
