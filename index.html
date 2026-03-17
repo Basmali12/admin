@@ -23,7 +23,7 @@
     <div class="container" id="main-container" style="display: none;">
 
         <div id="tab-add-product" class="tab-content active">
-            <span class="section-label">🛍️ إضافة منتج جديد</span>
+            <span class="section-label">🛍️ إضافة / تعديل منتج</span>
             <div style="background:white; padding:20px; border-radius:15px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
                 
                 <label style="font-size:13px; font-weight:bold;">الصورة:</label>
@@ -43,7 +43,8 @@
                 <div id="dynamic-buttons-container"></div>
                 <button class="action-btn" onclick="addDynamicButton()" style="background:#27ae60; margin-bottom:15px; width:auto; padding:8px 15px; font-size:12px;">+ إضافة زر دخول</button>
 
-                <button class="action-btn" onclick="uploadProduct()">نشر المنتج الآن</button>
+                <button class="action-btn" id="prod-action-btn" onclick="uploadProduct()">نشر المنتج الآن</button>
+                <button class="action-btn" onclick="resetProductForm()" style="background:#95a5a6; margin-top:10px;">إلغاء وإفراغ الحقول</button>
                 <div id="prod-status" class="status"></div>
 
                 <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
@@ -83,36 +84,22 @@
                 <div style="background:white; padding:15px; border-radius:15px; margin-bottom: 20px;">
                     <input type="text" id="cat-name-new" placeholder="اسم التصنيف (مثال: ساعات)">
                     <input type="file" id="cat-img-new">
-                    <button class="action-btn" onclick="uploadCategory()">إنشاء التصنيف</button>
+                    <button class="action-btn" id="cat-action-btn" onclick="uploadCategory()">إنشاء التصنيف</button>
+                    <button class="action-btn" onclick="resetCategoryForm()" style="background:#95a5a6; margin-top:10px;">إلغاء</button>
                     <div id="cat-status" class="status"></div>
                 </div>
                 <span class="section-label" style="font-size: 14px;">التصنيفات الحالية</span>
                 <div id="categories-list-manage"></div>
             </div>
         </div>
-
-        <div id="tab-settings" class="tab-content">
-            <span class="section-label">⚙️ إعدادات المتجر</span>
-            <div style="background:white; padding:20px; border-radius:15px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-                <label>اسم المتجر:</label>
-                <input type="text" id="store-name-input" placeholder="اكتب اسم المتجر هنا">
-                <label>رقم خدمة العملاء (واتساب):</label>
-                <input type="number" id="whatsapp-input" placeholder="964xxxxxxxxx">
-                <button class="action-btn" onclick="saveSettings()">حفظ التغييرات</button>
-                <div id="settings-status" class="status"></div>
-            </div>
-        </div>
     </div>
 
     <nav class="bottom-nav">
         <button class="nav-btn active" onclick="switchTab('tab-add-product', this)">
-            <i class="fa-solid fa-circle-plus"></i><span>إضافة منتج</span>
+            <i class="fa-solid fa-circle-plus"></i><span>المنتجات</span>
         </button>
         <button class="nav-btn" onclick="switchTab('tab-design', this)">
             <i class="fa-solid fa-paintbrush"></i><span>الواجهة</span>
-        </button>
-        <button class="nav-btn" onclick="switchTab('tab-settings', this)">
-            <i class="fa-solid fa-gear"></i><span>الإعدادات</span>
         </button>
     </nav>
 
