@@ -3,37 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة الإدارة - إضافة المنتجات</title>
+    <title>لوحة التحكم</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- مكاتب Firebase للإصدار 8 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
-
-    <div class="admin-container">
-        <h1>إدارة المنتجات</h1>
-        
-        <!-- نموذج إضافة منتج جديد -->
+    <div class="container">
+        <h1>إضافة منتج جديد</h1>
         <form id="productForm">
             <input type="text" id="productName" placeholder="اسم المنتج" required>
             <input type="number" id="productPrice" placeholder="السعر" required>
-            
-            <label for="productImage">اختر صورة (سيتم ضغطها تلقائياً):</label>
             <input type="file" id="productImage" accept="image/*" required>
-            
-            <!-- مساحة لمعاينة الصورة قبل رفعها -->
-            <img id="imagePreview" src="" alt="معاينة" style="display: none;">
-            
-            <button type="submit" id="submitBtn">رفع وحفظ المنتج</button>
+            <img id="imagePreview" src="" style="display: none; width: 100%; max-width: 200px; margin-top: 10px;">
+            <button type="submit" id="submitBtn">حفظ المنتج</button>
         </form>
 
-        <h2>قائمة المنتجات الحالية</h2>
-        <div id="adminProductsList"></div>
+        <h2>المنتجات الحالية</h2>
+        <div id="productsList"></div>
     </div>
-
-    <!-- ربط ملفات الجافاسكربت -->
     <script src="config.js"></script>
     <script src="script.js"></script>
 </body>
